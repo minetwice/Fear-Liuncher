@@ -1,0 +1,39 @@
+name: 🔍 Debug Build - Find Error
+
+on:
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout
+      uses: actions/checkout@v4
+    
+    - name: ☕ Setup JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: 17
+    
+    - name: 🔧 Make gradlew executable
+      run: chmod +x gradlew
+    
+    - name: 📂 List all files (debug)
+      run: |
+        echo "=== Root folder ==="
+        ls -la
+        echo "=== App folder ==="
+        ls -la app/ || echo "No app folder"
+        echo "=== Gradle folder ==="
+        ls -la gradle/wrapper/ || echo "No gradle folder"
+    
+    - name: 🛠️ Try to build with stacktrace
+      run: ./gradlew assembleDebug --stacktrace --no-daemon
+    
+    - name: 📂 Check if APK was created
+      run: |
+        echo "=== Checking build output ==="
+        find app/build -name "*.apk" 2>/dev/null || echo "No APK found"
+        ls -la app/build/outputs/ 2>/dev/null || echo "No outputs folder"
