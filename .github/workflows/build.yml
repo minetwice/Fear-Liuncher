@@ -1,41 +1,37 @@
-name: Fear Launcher - Build APK
+name: 🔨 Build Fear Launcher APK
 
-# Kab trigger hoga workflow
 on:
   push:
-    branches: [ main, master ]      # Jab main/master branch me push karo
+    branches: [ "main", "master" ]
   pull_request:
-    branches: [ main, master ]      # Jab PR banao
-  workflow_dispatch:                 # Manual trigger bhi (Actions tab se)
+    branches: [ "main", "master" ]
+  workflow_dispatch:    # Manual run ke liye button
 
 jobs:
   build:
-    runs-on: ubuntu-latest           # GitHub ka Ubuntu runner
-
+    runs-on: ubuntu-latest
+    
     steps:
-      # 1. Code ko checkout karo
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      # 2. Java 17 setup karo (Gradle 8.10 ke liye required)
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'     # Eclipse Temurin JDK
-          java-version: 17
-
-      # 3. gradlew ko executable banao
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
-
-      # 4. Debug APK build karo
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug
-
-      # 5. APK ko artifact ke roop me upload karo
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: FearLauncher-Debug
-          path: app/build/outputs/apk/debug/*.apk
-          retention-days: 30          # 30 din tak rahega artifact
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+    
+    - name: ☕ Setup JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: 17
+    
+    - name: 🔧 Make gradlew executable
+      run: chmod +x gradlew
+    
+    - name: 🛠️ Build Debug APK
+      run: ./gradlew assembleDebug --no-daemon
+    
+    - name: 📦 Upload APK - Actions me yahan dikhega
+      uses: actions/upload-artifact@v4
+      with:
+        name: FearLauncher-v1.0-DEBUG
+        path: app/build/outputs/apk/debug/*.apk
+        if-no-files-found: error
+        compression-level: 0
+        retention-days: 90
