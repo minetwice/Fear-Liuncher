@@ -1,3 +1,15 @@
 #!/bin/sh
-# (Full gradlew script - main ise chota nahi likh sakta, but tum copy kar sakte ho from any existing Android project)
-# Ya fir: tum Android Studio se naya project create karo, wahan se gradlew copy karo)
+
+APP_HOME=$(cd "${0%/*}"; pwd)
+
+DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
+
+CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
+
+if [ -n "$JAVA_HOME" ] ; then
+    JAVACMD="$JAVA_HOME/bin/java"
+else
+    JAVACMD="java"
+fi
+
+exec "$JAVACMD" $DEFAULT_JVM_OPTS -classpath "$CLASSPATH" org.gradle.wrapper.GradleWrapperMain "$@"
