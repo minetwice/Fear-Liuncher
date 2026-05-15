@@ -33,22 +33,36 @@ public class SetupActivity extends AppCompatActivity {
 
         progressBar.setVisibility(View.VISIBLE);
 
-        statusText.setText("Installing Java Runtime...");
+        statusText.setText("Creating launcher directories...");
+
+        LauncherPaths.init(this);
+
+        LauncherPaths.createAll();
 
         new Handler().postDelayed(() -> {
 
-            statusText.setText("Installing Assets...");
+            statusText.setText("Installing runtimes...");
 
-        }, 2000);
+            RuntimeInstaller.installAll();
+
+        }, 1500);
+
+        new Handler().postDelayed(() -> {
+
+            statusText.setText("Preparing Minecraft environment...");
+
+        }, 3000);
 
         new Handler().postDelayed(() -> {
 
             statusText.setText("Installation Complete");
 
-            startActivity(new Intent(this, DashboardActivity.class));
+            startActivity(
+                    new Intent(this, DashboardActivity.class)
+            );
 
             finish();
 
-        }, 4000);
+        }, 5000);
     }
 }
