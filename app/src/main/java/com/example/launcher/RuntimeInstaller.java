@@ -1,72 +1,75 @@
 package com.example.launcher;
 
 import android.content.Context;
-import android.util.Log;
 
 import java.io.File;
 
 public class RuntimeInstaller {
 
-    public interface InstallCallback {
-        void onProgress(String text);
-        void onFinished();
-        void onError(Exception e);
+    private final Context context;
+
+    public RuntimeInstaller(Context context) {
+
+        this.context = context;
     }
 
-    public static void installAll(
-            Context context,
-            InstallCallback callback
+    public void install(
+            MirrorDownloader.DownloadListener listener
     ) {
 
-        LauncherPaths.init(context);
-
-        LauncherPaths.createAll();
-
-        callback.onProgress("Downloading Java 17 Runtime...");
-
-        File java17 =
+        File root =
                 new File(
-                        LauncherPaths.ROOT,
-                        "runtime/java17.zip"
+                        context.getExternalFilesDir(null),
+                        "FearLauncher"
                 );
 
-        FileDownloader.download(
+        File runtime =
+                new File(root, "runtime");
 
-                "https://github.com/PojavLauncherTeam/android-openjdk-build-multiarch/releases/download/jre17/jre17-pojav.tar.xz",
+        File libraries =
+                new File(root, "libraries");
 
-                java17,
+        File assets =
+                new File(root, "assets");
 
-                new FileDownloader.DownloadCallback() {
+        runtime.mkdirs();
+        libraries.mkdirs();
+        assets.mkdirs();
 
-                    @Override
-                    public void onProgress(int progress) {
+        // JAVA RUNTIME
 
-                        callback.onProgress(
-                                "Java17 Download: " + progress + "%"
-                        );
-                    }
+        String[] javaMirrors = {
 
-                    @Override
-                    public void onFinish(File file) {
+                "https://github.com",
+                "https://download.oracle.com"
+        };
 
-                        Log.d(
-                                "FearLauncher",
-                                "Java17 Downloaded"
-                        );
+        File javaFile =
+                new File(runtime, "java-runtime.tar.xz");
 
-                        callback.onProgress(
-                                "Java17 Installed"
-                        );
+        MirrorDownloader.downloadFile(
+                "java-runtime.tar.xz",
+                javaMirrors,
+                javaFile,
+                listener
+        );
 
-                        callback.onFinished();
-                    }
+        // LWJGL
 
-                    @Override
-                    public void onError(Exception e) {
+        String[] lwjglMirrors = {
 
-                        callback.onError(e);
-                    }
-                }
+                "https://repo1.maven.org",
+                "https://libraries.minecraft.net"
+        };
+
+        File lwjglFile =
+                new File(libraries, "lwjgl3.zip");
+
+        MirrorDownloader.downloadFile(
+                "lwjgl3.zip",
+                lwjglMirrors,
+                lwjglFile,
+                listener
         );
     }
 }
