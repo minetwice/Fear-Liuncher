@@ -113,4 +113,3 @@ public class SetupActivity extends AppCompatActivity {
         );
     }
 }
-```1
