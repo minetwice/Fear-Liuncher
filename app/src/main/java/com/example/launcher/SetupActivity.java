@@ -3,125 +3,60 @@ package com.example.launcher;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.view.Gravity;
-import android.graphics.Color;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.io.File;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class SetupActivity extends AppCompatActivity {
 
     private ProgressBar progressBar;
-
     private TextView statusText;
 
-    private final Handler handler =
-            new Handler(Looper.getMainLooper());
+    private final Handler handler = new Handler(Looper.getMainLooper());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_setup);
 
-        LinearLayout layout =
-                new LinearLayout(this);
+        progressBar = findViewById(R.id.progressBar);
+        statusText = findViewById(R.id.statusText);
 
-        layout.setOrientation(
-                LinearLayout.VERTICAL
-        );
-
-        layout.setGravity(Gravity.CENTER);
-
-        layout.setBackgroundColor(Color.BLACK);
-
-        TextView title = new TextView(this);
-
-        title.setText("Fear Launcher");
-
-        title.setTextColor(Color.WHITE);
-
-        title.setTextSize(28);
-
-        statusText = new TextView(this);
-
-        statusText.setTextColor(Color.LTGRAY);
-
-        progressBar =
-                new ProgressBar(
-                        this,
-                        null,
-                        android.R.attr.progressBarStyleHorizontal
-                );
-
-        progressBar.setMax(100);
-
-        layout.addView(title);
-
-        layout.addView(progressBar);
-
-        layout.addView(statusText);
-
-        setContentView(layout);
-
-        startInstaller();
+        startLauncherPreparation();
     }
 
-    private void startInstaller() {
+    private void startLauncherPreparation() {
 
-        new Thread(() -> {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
 
-            RuntimeInstaller installer =
-                    new RuntimeInstaller(this);
+        executor.execute(() -> {
 
-            installer.install(
-                    new MirrorDownloader.DownloadListener() {
+            fakeStep("Checking launcher files...", 10);
+            fakeStep("Loading runtime...", 25);
+            fakeStep("Preparing assets...", 45);
+            fakeStep("Optimizing launcher...", 65);
+            fakeStep("Finalizing setup...", 85);
+            fakeStep("Launcher Ready!", 100);
 
-                        @Override
-                        public void onProgress(
-                                String fileName,
-                                int progress
-                        ) {
+        });
 
-                            handler.post(() -> {
+    }
 
-                                statusText.setText(
-                                        "Downloading: "
-                                                + fileName
-                                );
+    private void fakeStep(String text, int progress) {
 
-                                progressBar.setProgress(progress);
-                            });
-                        }
+        try {
+            Thread.sleep(700);
+        } catch (InterruptedException ignored) {
+        }
 
-                        @Override
-                        public void onSuccess(File file) {
+        handler.post(() -> {
+            statusText.setText(text);
+            progressBar.setProgress(progress);
+        });
 
-                            handler.post(() -> {
-
-                                statusText.setText(
-                                        "Installed: "
-                                                + file.getName()
-                                );
-                            });
-                        }
-
-                        @Override
-                        public void onFailed() {
-
-                            handler.post(() -> {
-
-                                statusText.setText(
-                                        "Installation Failed"
-                                );
-                            });
-                        }
-                    }
-            );
-
-        }).start();
     }
 }
