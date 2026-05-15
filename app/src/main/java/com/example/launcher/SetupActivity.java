@@ -1,115 +1,188 @@
 package com.example.launcher;
 
-import android.content.Intent;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.view.View;
-import android.widget.Button;
+import android.os.Environment;
+import android.util.Log;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.view.Gravity;
+import android.graphics.Color;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+import java.io.File;
 
 public class SetupActivity extends AppCompatActivity {
 
-    private ProgressBar progressBar;
+    private static final int STORAGE_PERMISSION_CODE = 100;
 
     private TextView statusText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_setup);
+        try {
 
-        progressBar = findViewById(R.id.progressBar);
+            // ROOT LAYOUT
+            LinearLayout layout = new LinearLayout(this);
+            layout.setOrientation(LinearLayout.VERTICAL);
+            layout.setGravity(Gravity.CENTER);
+            layout.setBackgroundColor(Color.BLACK);
 
-        statusText = findViewById(R.id.statusText);
+            // TITLE
+            TextView title = new TextView(this);
+            title.setText("Fear Launcher");
+            title.setTextColor(Color.WHITE);
+            title.setTextSize(28);
 
-        Button installButton =
-                findViewById(R.id.installButton);
+            // STATUS TEXT
+            statusText = new TextView(this);
+            statusText.setText("Initializing...");
+            statusText.setTextColor(Color.LTGRAY);
+            statusText.setTextSize(16);
 
-        installButton.setOnClickListener(v -> {
+            // PROGRESS BAR
+            ProgressBar progressBar = new ProgressBar(this);
+            progressBar.setIndeterminate(true);
 
-            startInstall();
-        });
+            layout.addView(title);
+            layout.addView(progressBar);
+            layout.addView(statusText);
+
+            setContentView(layout);
+
+            Log.d("FEAR", "Launcher Started");
+
+            // ANDROID 11+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+
+                createLauncherFolders();
+
+            } else {
+
+                checkStoragePermission();
+
+            }
+
+        } catch (Exception e) {
+
+            Log.e("FEAR", "CRASH", e);
+
+        }
     }
 
-    private void startInstall() {
+    private void checkStoragePermission() {
 
-        progressBar.setVisibility(View.VISIBLE);
-
-        progressBar.setProgress(0);
-
-        statusText.setText(
-                "Preparing launcher..."
-        );
-
-        RuntimeInstaller.installAll(
-
+        if (ContextCompat.checkSelfPermission(
                 this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+        ) != PackageManager.PERMISSION_GRANTED) {
 
-                new RuntimeInstaller.InstallCallback() {
+            ActivityCompat.requestPermissions(
+                    this,
+                    new String[]{
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                            Manifest.permission.READ_EXTERNAL_STORAGE
+                    },
+                    STORAGE_PERMISSION_CODE
+            );
 
-                    @Override
-                    public void onProgress(String text) {
+        } else {
 
-                        runOnUiThread(() -> {
+            createLauncherFolders();
 
-                            statusText.setText(text);
+        }
+    }
 
-                            int current =
-                                    progressBar.getProgress();
+    private void createLauncherFolders() {
 
-                            if (current < 100) {
+        try {
 
-                                progressBar.setProgress(
-                                        current + 5
-                                );
-                            }
-                        });
-                    }
+            File root;
 
-                    @Override
-                    public void onFinished() {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
 
-                        runOnUiThread(() -> {
+                root = new File(
+                        getExternalFilesDir(null),
+                        "FearLauncher"
+                );
 
-                            progressBar.setProgress(100);
+            } else {
 
-                            statusText.setText(
-                                    "Launcher Ready"
-                            );
+                root = new File(
+                        Environment.getExternalStorageDirectory(),
+                        "FearLauncher"
+                );
 
-                            new Handler().postDelayed(() -> {
+            }
 
-                                startActivity(
+            // MAIN FOLDERS
+            File runtime = new File(root, "runtime");
+            File javaFolder = new File(runtime, "java");
+            File lwjgl = new File(runtime, "lwjgl");
+            File libraries = new File(root, "libraries");
+            File assets = new File(root, "assets");
+            File versions = new File(root, "versions");
+            File natives = new File(root, "natives");
+            File config = new File(root, "config");
+            File logs = new File(root, "logs");
 
-                                        new Intent(
-                                                SetupActivity.this,
-                                                DashboardActivity.class
-                                        )
-                                );
+            runtime.mkdirs();
+            javaFolder.mkdirs();
+            lwjgl.mkdirs();
+            libraries.mkdirs();
+            assets.mkdirs();
+            versions.mkdirs();
+            natives.mkdirs();
+            config.mkdirs();
+            logs.mkdirs();
 
-                                finish();
+            statusText.setText("Folders Created Successfully");
 
-                            }, 1500);
-                        });
-                    }
+            Log.d("FEAR", "All launcher folders created");
 
-                    @Override
-                    public void onError(Exception e) {
+        } catch (Exception e) {
 
-                        runOnUiThread(() -> {
+            statusText.setText("Folder Creation Failed");
 
-                            statusText.setText(
-                                    "Install Failed:\n"
-                                            + e.getMessage()
-                            );
-                        });
-                    }
-                }
+            Log.e("FEAR", "FOLDER ERROR", e);
+
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(
+            int requestCode,
+            @NonNull String[] permissions,
+            @NonNull int[] grantResults
+    ) {
+
+        super.onRequestPermissionsResult(
+                requestCode,
+                permissions,
+                grantResults
         );
+
+        if (requestCode == STORAGE_PERMISSION_CODE) {
+
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                createLauncherFolders();
+
+            } else {
+
+                statusText.setText("Storage Permission Denied");
+
+            }
+        }
     }
 }
