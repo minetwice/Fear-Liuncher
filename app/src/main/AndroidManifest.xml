@@ -22,20 +22,19 @@
     android:roundIcon="@drawable/ic_launcher"
     android:supportsRtl="true"
     android:theme="@style/Theme.AppCompat.Light.NoActionBar">
-    
-        <!-- Main launcher -->
-        <activity
-            android:name=".MainActivity"
-            android:exported="true">
 
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
+    <activity
+        android:name=".SetupActivity"
+        android:exported="true">
 
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN"/>
 
-        </activity>
+            <category android:name="android.intent.category.LAUNCHER"/>
+        </intent-filter>
 
-    </application>
+    </activity>
+
+</application>
 
 </manifest>
