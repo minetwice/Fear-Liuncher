@@ -13,56 +13,104 @@ import androidx.appcompat.app.AppCompatActivity;
 public class SetupActivity extends AppCompatActivity {
 
     private ProgressBar progressBar;
+
     private TextView statusText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_setup);
 
         progressBar = findViewById(R.id.progressBar);
+
         statusText = findViewById(R.id.statusText);
 
-        Button installButton = findViewById(R.id.installButton);
+        Button installButton =
+                findViewById(R.id.installButton);
 
-        installButton.setOnClickListener(v -> startInstall());
+        installButton.setOnClickListener(v -> {
+
+            startInstall();
+        });
     }
 
     private void startInstall() {
 
         progressBar.setVisibility(View.VISIBLE);
 
-        statusText.setText("Creating launcher directories...");
+        progressBar.setProgress(0);
 
-        LauncherPaths.init(this);
+        statusText.setText(
+                "Preparing launcher..."
+        );
 
-        LauncherPaths.createAll();
+        RuntimeInstaller.installAll(
 
-        new Handler().postDelayed(() -> {
+                this,
 
-            statusText.setText("Installing runtimes...");
+                new RuntimeInstaller.InstallCallback() {
 
-            RuntimeInstaller.installAll();
+                    @Override
+                    public void onProgress(String text) {
 
-        }, 1500);
+                        runOnUiThread(() -> {
 
-        new Handler().postDelayed(() -> {
+                            statusText.setText(text);
 
-            statusText.setText("Preparing Minecraft environment...");
+                            int current =
+                                    progressBar.getProgress();
 
-        }, 3000);
+                            if (current < 100) {
 
-        new Handler().postDelayed(() -> {
+                                progressBar.setProgress(
+                                        current + 5
+                                );
+                            }
+                        });
+                    }
 
-            statusText.setText("Installation Complete");
+                    @Override
+                    public void onFinished() {
 
-            startActivity(
-                    new Intent(this, DashboardActivity.class)
-            );
+                        runOnUiThread(() -> {
 
-            finish();
+                            progressBar.setProgress(100);
 
-        }, 5000);
+                            statusText.setText(
+                                    "Launcher Ready"
+                            );
+
+                            new Handler().postDelayed(() -> {
+
+                                startActivity(
+
+                                        new Intent(
+                                                SetupActivity.this,
+                                                DashboardActivity.class
+                                        )
+                                );
+
+                                finish();
+
+                            }, 1500);
+                        });
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+
+                        runOnUiThread(() -> {
+
+                            statusText.setText(
+                                    "Install Failed:\n"
+                                            + e.getMessage()
+                            );
+                        });
+                    }
+                }
+        );
     }
 }
+```1
