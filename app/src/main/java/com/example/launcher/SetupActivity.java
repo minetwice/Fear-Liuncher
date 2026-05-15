@@ -1,17 +1,12 @@
 package com.example.launcher;
 
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -21,11 +16,9 @@ import java.net.URL;
 
 public class SetupActivity extends AppCompatActivity {
 
-    private ProgressBar progressBar;
-    private TextView statusText;
-    private Button downloadButton;
-
-    private static final int STORAGE_PERMISSION_CODE = 100;
+    ProgressBar progressBar;
+    TextView statusText;
+    Button downloadButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,42 +31,43 @@ public class SetupActivity extends AppCompatActivity {
 
         progressBar.setMax(100);
 
-        File gameDir = new File(getExternalFilesDir(null), "FearLauncher");
-
-        if (!gameDir.exists()) {
-            gameDir.mkdirs();
-        }
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                    != PackageManager.PERMISSION_GRANTED) {
-
-                ActivityCompat.requestPermissions(
-                        this,
-                        new String[]{
-                                Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                                Manifest.permission.READ_EXTERNAL_STORAGE
-                        },
-                        STORAGE_PERMISSION_CODE
-                );
-
-            }
-
-        }
+        createLauncherFolder();
 
         downloadButton.setOnClickListener(v -> {
 
             statusText.setText("Starting Download...");
 
             downloadFile(
-                    "https://piston-data.mojang.com/v1/objects/fd1bfd99905340790c2f0c2d92b8bbc65ff9f28d/client.jar",
-                    "minecraft-client.jar"
+                    "https://launchermeta.mojang.com/mc/game/version_manifest.json",
+                    "version_manifest.json"
             );
 
         });
+
+    }
+
+    private void createLauncherFolder() {
+
+        File folder = new File(
+                getExternalFilesDir(null),
+                "FearLauncher"
+        );
+
+        if (!folder.exists()) {
+
+            boolean created = folder.mkdirs();
+
+            if (created) {
+
+                Toast.makeText(
+                        this,
+                        "Folder Created",
+                        Toast.LENGTH_SHORT
+                ).show();
+
+            }
+
+        }
 
     }
 
@@ -81,9 +75,14 @@ public class SetupActivity extends AppCompatActivity {
 
         new Thread(() -> {
 
+            HttpURLConnection connection = null;
+
             try {
 
-                File folder = new File(getExternalFilesDir(null), "FearLauncher");
+                File folder = new File(
+                        getExternalFilesDir(null),
+                        "FearLauncher"
+                );
 
                 if (!folder.exists()) {
                     folder.mkdirs();
@@ -93,31 +92,58 @@ public class SetupActivity extends AppCompatActivity {
 
                 URL url = new URL(urlString);
 
-                HttpURLConnection connection =
+                connection =
                         (HttpURLConnection) url.openConnection();
 
-                connection.setConnectTimeout(10000);
-                connection.setReadTimeout(10000);
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(15000);
+                connection.setReadTimeout(15000);
+                connection.setDoInput(true);
+
                 connection.connect();
 
-                int fileLength = connection.getContentLength();
+                int responseCode =
+                        connection.getResponseCode();
 
-                InputStream inputStream = connection.getInputStream();
+                if (responseCode != HttpURLConnection.HTTP_OK) {
+
+                    runOnUiThread(() -> {
+
+                        statusText.setText(
+                                "Server Error: "
+                                        + responseCode
+                        );
+
+                    });
+
+                    return;
+                }
+
+                int fileLength =
+                        connection.getContentLength();
+
+                InputStream inputStream =
+                        connection.getInputStream();
 
                 FileOutputStream outputStream =
                         new FileOutputStream(outputFile);
 
-                byte[] data = new byte[4096];
+                byte[] buffer = new byte[4096];
 
                 long total = 0;
 
                 int count;
 
-                while ((count = inputStream.read(data)) != -1) {
+                while ((count =
+                        inputStream.read(buffer)) != -1) {
 
                     total += count;
 
-                    outputStream.write(data, 0, count);
+                    outputStream.write(
+                            buffer,
+                            0,
+                            count
+                    );
 
                     if (fileLength > 0) {
 
@@ -129,11 +155,11 @@ public class SetupActivity extends AppCompatActivity {
                             progressBar.setProgress(progress);
 
                             statusText.setText(
-                                    "Downloading: "
+                                    "Downloading:\n"
                                             + fileName
-                                            + " ("
+                                            + "\n"
                                             + progress
-                                            + "%)"
+                                            + "%"
                             );
 
                         });
@@ -144,6 +170,7 @@ public class SetupActivity extends AppCompatActivity {
 
                 outputStream.flush();
                 outputStream.close();
+
                 inputStream.close();
 
                 runOnUiThread(() -> {
@@ -151,9 +178,15 @@ public class SetupActivity extends AppCompatActivity {
                     progressBar.setProgress(100);
 
                     statusText.setText(
-                            "Download Complete:\n"
+                            "Download Complete\n\nSaved To:\n"
                                     + outputFile.getAbsolutePath()
                     );
+
+                    Toast.makeText(
+                            SetupActivity.this,
+                            "File Downloaded",
+                            Toast.LENGTH_LONG
+                    ).show();
 
                 });
 
@@ -162,54 +195,21 @@ public class SetupActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
 
                     statusText.setText(
-                            "Download Failed:\n"
-                                    + e.getMessage()
+                            "Download Failed\n\n"
+                                    + e.toString()
                     );
 
                 });
 
-            }
+            } finally {
 
-        }).start();
-
-    }
-
-    @Override
-    public void onRequestPermissionsResult(
-            int requestCode,
-            @NonNull String[] permissions,
-            @NonNull int[] grantResults
-    ) {
-        super.onRequestPermissionsResult(
-                requestCode,
-                permissions,
-                grantResults
-        );
-
-        if (requestCode == STORAGE_PERMISSION_CODE) {
-
-            boolean granted = true;
-
-            for (int result : grantResults) {
-
-                if (result != PackageManager.PERMISSION_GRANTED) {
-                    granted = false;
-                    break;
+                if (connection != null) {
+                    connection.disconnect();
                 }
 
             }
 
-            if (granted) {
-
-                statusText.setText("Storage Permission Granted");
-
-            } else {
-
-                statusText.setText("Storage Permission Denied");
-
-            }
-
-        }
+        }).start();
 
     }
 
