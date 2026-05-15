@@ -8,26 +8,27 @@ public class LauncherPaths {
 
     public static File ROOT;
 
-    public static File JAVA_17;
-    public static File JAVA_21;
-    public static File JAVA_25;
-
-    public static File JNI;
-    public static File LOGS;
     public static File CACHE;
-    public static File CONFIG;
-    public static File DOWNLOADS;
-    public static File RUNTIME;
-    public static File LWJGL;
+    public static File LOCAL;
+    public static File MINECRAFT;
 
-    public static File MC_ROOT;
-    public static File MC_ASSETS;
-    public static File MC_LIBRARIES;
-    public static File MC_VERSIONS;
-    public static File MC_MODS;
-    public static File MC_SAVES;
-    public static File MC_SHADERS;
-    public static File MC_RESOURCEPACKS;
+    public static File ASSETS;
+    public static File LIBRARIES;
+    public static File VERSIONS;
+    public static File MODS;
+    public static File SAVES;
+    public static File RESOURCEPACKS;
+    public static File SHADERPACKS;
+
+    public static File LWJL3;
+    public static File CACIOCAVALLO;
+    public static File CACIOCAVALLO17;
+
+    public static File CONTROLMAP;
+    public static File INSTANCES;
+    public static File SHARED_DIR;
+
+    public static File LOG_FILE;
 
     public static void init(Context context) {
 
@@ -36,53 +37,69 @@ public class LauncherPaths {
                 "FearLauncher"
         );
 
-        JAVA_17 = new File(ROOT, "java/java17");
-        JAVA_21 = new File(ROOT, "java/java21");
-        JAVA_25 = new File(ROOT, "java/java25");
+        CACHE = new File(ROOT, ".cache");
+        LOCAL = new File(ROOT, ".local");
 
-        JNI = new File(ROOT, "jni");
-        LOGS = new File(ROOT, "logs");
-        CACHE = new File(ROOT, "cache");
-        CONFIG = new File(ROOT, "config");
-        DOWNLOADS = new File(ROOT, "downloads");
-        RUNTIME = new File(ROOT, "runtime");
-        LWJGL = new File(ROOT, "lwjgl");
+        MINECRAFT = new File(ROOT, ".minecraft");
 
-        MC_ROOT = new File(ROOT, "minecraft");
+        ASSETS = new File(MINECRAFT, "assets");
+        LIBRARIES = new File(MINECRAFT, "libraries");
+        VERSIONS = new File(MINECRAFT, "versions");
+        MODS = new File(MINECRAFT, "mods");
+        SAVES = new File(MINECRAFT, "saves");
+        RESOURCEPACKS = new File(MINECRAFT, "resourcepacks");
+        SHADERPACKS = new File(MINECRAFT, "shaderpacks");
 
-        MC_ASSETS = new File(MC_ROOT, "assets");
-        MC_LIBRARIES = new File(MC_ROOT, "libraries");
-        MC_VERSIONS = new File(MC_ROOT, "versions");
-        MC_MODS = new File(MC_ROOT, "mods");
-        MC_SAVES = new File(MC_ROOT, "saves");
-        MC_SHADERS = new File(MC_ROOT, "shaderpacks");
-        MC_RESOURCEPACKS = new File(MC_ROOT, "resourcepacks");
+        LWJL3 = new File(ROOT, "lwjgl3");
+
+        CACIOCAVALLO = new File(ROOT, "caciocavallo");
+        CACIOCAVALLO17 = new File(ROOT, "caciocavallo17");
+
+        CONTROLMAP = new File(ROOT, "controlmap");
+
+        INSTANCES = new File(ROOT, "instances");
+
+        SHARED_DIR = new File(ROOT, "shared_dir");
+
+        LOG_FILE = new File(ROOT, "latestlog.txt");
     }
 
     public static void createAll() {
 
         ROOT.mkdirs();
 
-        JAVA_17.mkdirs();
-        JAVA_21.mkdirs();
-        JAVA_25.mkdirs();
-
-        JNI.mkdirs();
-        LOGS.mkdirs();
         CACHE.mkdirs();
-        CONFIG.mkdirs();
-        DOWNLOADS.mkdirs();
-        RUNTIME.mkdirs();
-        LWJGL.mkdirs();
+        LOCAL.mkdirs();
 
-        MC_ROOT.mkdirs();
+        MINECRAFT.mkdirs();
 
-        MC_ASSETS.mkdirs();
-        MC_LIBRARIES.mkdirs();
-        MC_VERSIONS.mkdirs();
-        MC_MODS.mkdirs();
-        MC_SAVES.mkdirs();
-        MC_SHADERS.mkdirs();
-        MC_RESOURCEPACKS.mkdirs();
+        ASSETS.mkdirs();
+        LIBRARIES.mkdirs();
+        VERSIONS.mkdirs();
+        MODS.mkdirs();
+        SAVES.mkdirs();
+        RESOURCEPACKS.mkdirs();
+        SHADERPACKS.mkdirs();
+
+        LWJL3.mkdirs();
+
+        CACIOCAVALLO.mkdirs();
+        CACIOCAVALLO17.mkdirs();
+
+        CONTROLMAP.mkdirs();
+
+        INSTANCES.mkdirs();
+
+        SHARED_DIR.mkdirs();
+
+        try {
+
+            if (!LOG_FILE.exists()) {
+                LOG_FILE.createNewFile();
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
