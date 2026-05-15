@@ -11,8 +11,17 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        startActivity(new Intent(this, SetupActivity.class));
+        new Thread(() -> {
 
-        finish();
+            try {
+                Thread.sleep(500);
+            } catch (Exception ignored) {}
+
+            runOnUiThread(() -> {
+                startActivity(new Intent(MainActivity.this, SetupActivity.class));
+                finish();
+            });
+
+        }).start();
     }
 }
