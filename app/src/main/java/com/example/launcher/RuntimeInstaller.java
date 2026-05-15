@@ -1,72 +1,72 @@
 package com.example.launcher;
 
+import android.content.Context;
 import android.util.Log;
 
 import java.io.File;
-import java.io.FileWriter;
 
 public class RuntimeInstaller {
 
-    public static void installAll() {
-
-        writeLog("FearLauncher Installer Started");
-
-        installJava("java17");
-        installJava("java21");
-        installJava("java25");
-
-        installLWJGL();
-
-        installCacio();
-
-        writeLog("Installation Completed");
+    public interface InstallCallback {
+        void onProgress(String text);
+        void onFinished();
+        void onError(Exception e);
     }
 
-    private static void installJava(String version) {
+    public static void installAll(
+            Context context,
+            InstallCallback callback
+    ) {
 
-        File javaDir = new File(
-                LauncherPaths.ROOT,
-                "runtime/" + version
+        LauncherPaths.init(context);
+
+        LauncherPaths.createAll();
+
+        callback.onProgress("Downloading Java 17 Runtime...");
+
+        File java17 =
+                new File(
+                        LauncherPaths.ROOT,
+                        "runtime/java17.zip"
+                );
+
+        FileDownloader.download(
+
+                "https://github.com/PojavLauncherTeam/android-openjdk-build-multiarch/releases/download/jre17/jre17-pojav.tar.xz",
+
+                java17,
+
+                new FileDownloader.DownloadCallback() {
+
+                    @Override
+                    public void onProgress(int progress) {
+
+                        callback.onProgress(
+                                "Java17 Download: " + progress + "%"
+                        );
+                    }
+
+                    @Override
+                    public void onFinish(File file) {
+
+                        Log.d(
+                                "FearLauncher",
+                                "Java17 Downloaded"
+                        );
+
+                        callback.onProgress(
+                                "Java17 Installed"
+                        );
+
+                        callback.onFinished();
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+
+                        callback.onError(e);
+                    }
+                }
         );
-
-        javaDir.mkdirs();
-
-        writeLog("Installed " + version);
-    }
-
-    private static void installLWJGL() {
-
-        LauncherPaths.LWJL3.mkdirs();
-
-        writeLog("LWJGL Installed");
-    }
-
-    private static void installCacio() {
-
-        LauncherPaths.CACIOCAVALLO.mkdirs();
-        LauncherPaths.CACIOCAVALLO17.mkdirs();
-
-        writeLog("Caciocavallo Installed");
-    }
-
-    private static void writeLog(String text) {
-
-        try {
-
-            FileWriter writer =
-                    new FileWriter(
-                            LauncherPaths.LOG_FILE,
-                            true
-                    );
-
-            writer.append(text).append("\n");
-
-            writer.close();
-
-            Log.d("FearLauncher", text);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 }
